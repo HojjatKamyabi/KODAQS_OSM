@@ -685,7 +685,7 @@ Sensitivity analyses should be used to assess whether substantive results are ro
 
 ## Future Work 
 
-* Expand the range of POI categories. 
+* Expand the range of POI categories.
 
 Future research should incorporate additional built environment features, such as post offices, public transport stops, pharmacies, banks and ATMs, to assess whether patterns of coverage as observed for hospitals, schools, and supermarkets generalize to other types of public and commercial infrastructure.
 
