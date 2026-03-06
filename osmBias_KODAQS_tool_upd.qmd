@@ -15,7 +15,7 @@ format:
 biblio-style: apa
 ---
 
-# At a glance
+# At a glance 
 
 **How do differences in point of interest (POI) data sources affect analytical results?** \
 This tool offers a hands-on, step-by-step workflow to help users compare POI data from OpenStreetMap (OSM) with administrative POI and built environment datasets. The tutorial walks users through the following steps:\
