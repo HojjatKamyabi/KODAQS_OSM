@@ -645,10 +645,233 @@ Across both figures, the spatial patterns of public service provision look very 
 
 Taken together, this convergence increases confidence in using OSM data as a reliable source for capturing public service provision proxies, even though there might be critical differences in how data are collected, tagged, and recorded in OSM compared to the official built environment data.
 
-# Part Four: Link to Survey Data and Run Models
+# Part Four: Link to Survey Data and Assess Impacts on Analytical Results
 
- TO DO XXX
- 
+Having prepared and compared POI data from OSM and official sources in the first partse, we now turn to the core analytical question: do differences in POI data sources affect substantive conclusions in survey-based analyses? To address this, we link the POI-based measures of public service provision to individual-level survey data and estimate parallel multilevel regression models using OSM-based and official POI indicators as predictors.
+
+## Survey Data: German Longitudinal Election Study 2021
+
+To measure subjective perceptions of infrastructural deprivation, we rely on simulated survey data that mirrors the structure and distributional properties of the German Longitudinal Election Study (GLES) Cross-Section 2021 [@gles2023]. The GLES Cross-Section 2021 is a cross-sectional, probability-based, georeferenced survey focusing on the political attitudes, opinions, and behaviors of German voters and non-voters, defined as German citizens aged 16 and older who are registered in the Federal Republic of Germany with their primary residence. The original dataset comprises 8,550 respondents that were sampled in 162 municipalities. All responses were georeferenced to the municipality of each respondent's registered residence.
+
+The dependent variable, perceived infrastructural deprivation, was measured by a single survey item: "Society pays too little attention to ensuring that people like me have access to basic infrastructures and services (e.g., post office, doctors, banks, public transportation, schools, Internet)." Respondents filled out a five-point Likert scale ranging from 1 ("Strongly agree") to 5 ("Strongly disagree"). For the analysis, the scale was reversed and recoded to range from 0 (low deprivation) to 4 (high deprivation), so that higher values indicate stronger perceived infrastructural deprivation.
+
+::: {.callout-note title="Synthetic data"}
+Due to data protection requirements, the georeferenced GLES data used in the original study cannot be shared publicly. The dataset used in this tool is a fully synthetic version that preserves the distributional properties, correlation structure, and clustering of the original data, but does not contain any real respondent information or identifiable municipality codes. For details on the data generation procedure, see the accompanying simulation script.
+<!-- TODO: Link simulation script -->
+:::
+
+## Data Linkage
+
+To analyze the relationship between public service provision and perceived infrastructural deprivation, we need to link the municipality-level POI counts to the individual-level survey data. The counts per municipality and POI type were already computed for the coverage evaluation above (`counts_osm` and `counts_bund`). They are pivoted to wide format so that each municipality has one column per POI type, then joined to the survey data via the municipality identifier. 
+
+```{r, eval=FALSE}
+# pivot from long to wide: one column per POI type
+counts_osm_wide 
+  sf::st_drop_geometry() |>
+  tidyr::pivot_wider(names_from = fclass, values_from = poi_count,
+                     names_prefix = "osm_")
+
+counts_bund_wide 
+  sf::st_drop_geometry() |>
+  tidyr::pivot_wider(names_from = poi_type, values_from = poi_count,
+                     names_prefix = "official_")
+
+# link to survey data via municipality ID
+survey_context 
+  dplyr::left_join(counts_osm_wide, by = "mun_id") |>
+  dplyr::left_join(counts_bund_wide, by = "mun_id")
+```
+
+::: {.callout-note title="Applying this to your own data"}
+The code above is not executed here because this tool uses a pre-linked synthetic dataset. However, if you are working with your own georeferenced survey data, this is the code you would run to merge the POI counts from Parts One through Three onto your survey respondents. The only requirement is a shared municipality identifier (`mun_id`) across the survey and POI data. 
+:::
+
+For this tool, we load the pre-linked synthetic survey-context dataset directly:
+```{r}
+survey_context <- readRDS(file.path(base, "simulated_survey_context.rds"))
+```
+```{r}
+# sample size and clustering
+cat("N respondents:", nrow(survey_context), "\n")
+cat("N municipalities:", length(unique(survey_context$mun_id)), "\n")
+```
+
+## Descriptive Statistics
+
+Before turning to the regression analysis, we inspect the key variables in the dataset.
+
+### Dependent Variable
+
+```{r}
+# DV distribution
+cat("service_depri distribution:\n")
+print(round(prop.table(table(survey_context$service_depri, useNA = "ifany")), 3))
+
+cat("\nMean:", round(mean(survey_context$service_depri, na.rm = TRUE), 2), "\n")
+cat("SD:", round(sd(survey_context$service_depri, na.rm = TRUE), 2), "\n")
+cat("% missing:", round(mean(is.na(survey_context$service_depri)) * 100, 1), "%\n")
+```
+
+### Individual-Level Controls
+
+```{r}
+cat("=== Demographics ===\n\n")
+cat("Age:\n")
+cat("  Mean:", round(mean(survey_context$age, na.rm = TRUE), 1), "\n")
+cat("  SD:", round(sd(survey_context$age, na.rm = TRUE), 1), "\n")
+cat("  Range:", min(survey_context$age, na.rm = TRUE), "-",
+    max(survey_context$age, na.rm = TRUE), "\n")
+cat("  % missing:", round(mean(is.na(survey_context$age)) * 100, 1), "%\n\n")
+
+cat("Gender:\n")
+cat("  % female:", round(mean(survey_context$female, na.rm = TRUE) * 100, 1), "%\n")
+cat("  % missing:", round(mean(is.na(survey_context$female)) * 100, 1), "%\n\n")
+
+cat("Education:\n")
+cat("  % low:", round(mean(survey_context$edu_low, na.rm = TRUE) * 100, 1), "%\n")
+cat("  % mid:", round(mean(survey_context$edu_mid, na.rm = TRUE) * 100, 1), "%\n")
+cat("  % high:", round(mean(survey_context$edu_high, na.rm = TRUE) * 100, 1), "%\n")
+```
+
+### Municipality-Level POI Counts
+
+The POI counts represent the number of hospitals, schools, and supermarkets recorded in each respondent's municipality of residence, drawn from both data sources. Let us first inspect the counts as they come from the data linkage in the first parts. Note that municipalities where a given POI type was not recorded appear as `NA`, since these municipalities were simply not present in the POI count table produced by the spatial join.
+
+```{r}
+poi_vars <- c(
+  "osm_hospital", "official_hospital",
+  "osm_school", "official_school",
+  "osm_supermarket", "official_supermarket"
+)
+
+# aggregate to municipality level for summary
+mun_level <- survey_context |>
+  dplyr::group_by(mun_id) |>
+  dplyr::summarise(
+    dplyr::across(dplyr::any_of(poi_vars), ~ dplyr::first(.x)),
+    .groups = "drop"
+  )
+
+cat("POI count distributions at the municipality level for respondents:\n\n")
+for (v in poi_vars) {
+  x <- mun_level[[v]]
+  cat(sprintf("%-30s mean=%5.1f  sd=%6.1f  median=%4.0f  max=%5.0f  %%NA=%4.1f%%\n",
+              v, mean(x, na.rm = TRUE), sd(x, na.rm = TRUE),
+              median(x, na.rm = TRUE), max(x, na.rm = TRUE),
+              mean(is.na(x)) * 100))
+}
+```
+
+The `NA` values are particularly frequent for hospitals, which is expected: many smaller municipalities do not have a hospital within their boundaries. However, these missing values pose a practical problem for regression analysis: by default, we would perform listwise deletion, meaning that any respondent whose municipality has an `NA` on the POI predictor is excluded from the model entirely. For hospitals, this can result in a substantial loss of observations, as all respondents in municipalities without a hospital would be dropped from the analysis.
+
+### Handle Missing POI Counts: Zero Imputation
+
+To retain these observations, we replace `NA` values with zero. This is substantively justified: a municipality that does not appear in the hospital count table has zero hospitals recorded in the respective data source. We assume for our analyses that the absence of a POI record reflects the real absence of that service type in the municipality.
+
+```{r}
+survey_context <- survey_context |>
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::all_of(poi_vars),
+      ~ tidyr::replace_na(.x, 0),
+      .names = "{.col}_zero"
+    )
+  )
+```
+
+We can verify that the imputation worked as expected by inspecting the zero-imputed variables.
+
+```{r}
+poi_vars_zero <- paste0(poi_vars, "_zero")
+
+mun_level_zero <- survey_context |>
+  dplyr::group_by(mun_id) |>
+  dplyr::summarise(
+    dplyr::across(dplyr::any_of(poi_vars_zero), ~ dplyr::first(.x)),
+    .groups = "drop"
+  )
+
+cat("POI count distributions after zero imputation:\n\n")
+for (v in poi_vars_zero) {
+  x <- mun_level_zero[[v]]
+  cat(sprintf("%-30s mean=%5.1f  sd=%6.1f  median=%4.0f  max=%5.0f  %%zero=%4.1f%%\n",
+              v, mean(x), sd(x), median(x), max(x),
+              mean(x == 0) * 100))
+}
+```
+
+## Multilevel Model Specification
+
+Because respondents are nested within municipalities, we use multilevel (mixed-effects) regression models with random intercepts at the municipality level. This accounts for the fact that respondents within the same municipality share the same local public service provision environment and may therefore have correlated outcomes.
+
+For each of the three public service provision proxies (hospitals, schools, supermarkets), we estimate two models: one using the OSM-based POI count and one using the official POI-Bund count. This parallel estimation strategy allows us to directly compare whether the choice of data source leads to different substantive conclusions. Formally, each model is specified as:
+
+$$
+\text{service\_depri}_{ij} = \beta_0 + \beta_1 \cdot \text{POI}_{j} + \beta_2 \cdot \text{age}_{ij} + \beta_3 \cdot \text{female}_{ij} + \beta_4 \cdot \text{edu\_low}_{ij} + \beta_5 \cdot \text{edu\_high}_{ij} + u_j + \varepsilon_{ij}
+$$
+
+where $i$ indexes respondents and $j$ indexes municipalities, $u_j \sim N(0, \sigma^2_u)$ is the municipality-level random intercept, and $\varepsilon_{ij} \sim N(0, \sigma^2_\varepsilon)$ is the individual-level residual.
+
+## Estimate Parallel Models
+
+We define the predictor pairs and estimate all six models in a single loop.
+
+```{r}
+predictors <- list(
+  "Hospitals"    = c(osm = "osm_hospital_zero",
+                     official = "official_hospital_zero"),
+  "Schools"      = c(osm = "osm_school_zero",
+                     official = "official_school_zero"),
+  "Supermarkets" = c(osm = "osm_supermarket_zero",
+                     official = "official_supermarket_zero")
+)
+
+results <- purrr::imap_dfr(predictors, function(vars, label) {
+  purrr::imap_dfr(vars, function(v, source) {
+    formula <- as.formula(paste0(
+      "service_depri ~ ", v,
+      " + age + female + edu_low + edu_high + (1 | mun_id)"
+    ))
+    m <- lmer(formula, data = survey_context, REML = FALSE)
+    broom.mixed::tidy(m, conf.int = TRUE) |>
+      dplyr::filter(term == v) |>
+      dplyr::mutate(poi_type = label, source = source)
+  })
+})
+```
+
+
+The coefficient plot below displays the estimated effects of public service provision on perceived infrastructural deprivation, separately for each POI type and data source. The key comparison is between OSM-based estimates (light blue) and official POI-Bund estimates (dark blue). If the confidence intervals overlap substantially, this suggests that the choice of POI data source does not meaningfully alter substantive conclusions.
+
+```{r, fig.width=8, fig.height=5}
+ggplot(results, aes(x = poi_type, y = estimate, color = source)) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = 0.4),
+    size = 0.8
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  scale_color_manual(
+    values = c(osm = "#CBDDFE", official = "#014AAD"),
+    labels = c(osm = "OSM", official = "Official (POI-Bund)")
+  ) +
+  labs(
+    title = "Effect of Public Service Provision on Perceived Infrastructural Deprivation",
+    subtitle = "Multilevel models with random intercepts by municipality",
+    x = NULL,
+    y = "Coefficient estimate (95% CI)",
+    color = "Data source"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+## Interpretation 
+
+The coefficient plot reveals several key findings. First, across all three public service provision proxies, the estimated effects are negative, consistent with the theoretical expectation that higher availability of local public services is associated with lower perceived infrastructural deprivation. Respondents living in municipalities with more hospitals, schools, or supermarkets tend to report lower levels of perceived deprivation, even after controlling for individual-level demographic characteristics. 
+
+Second, and critically for the purposes of this tool, the OSM-based and official POI-Bund-based estimates are highly similar in magnitude, direction, and statistical significance. The confidence intervals overlap substantially across all comparisons, indicating that the choice of POI data source does not meaningfully alter the substantive conclusions drawn from the analysis.
 
 
 # Conclusion, Recommendations and Future Work {#conclusion-recommendations-future-work}
