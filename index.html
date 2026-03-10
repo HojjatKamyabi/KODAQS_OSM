@@ -8,6 +8,7 @@
 
 <meta name="author" content="Daria Dementeva, research associate, Urban Development &amp; Mobility, Luxembourg Institute of Socio-Economic Research">
 <meta name="author" content="Anne-Kathrin Stroppe, research associate, Survey Data Curation, GESIS – Leibniz Institute for the Social Sciences">
+<meta name="dcterms.date" content="2026-03-10">
 
 <title>osmBias</title>
 <style>
@@ -125,11 +126,10 @@ window.Quarto = {
 
 </head>
 
-<body class="quarto-light">
+<body class="fullcontent quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></div>
+
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -153,7 +153,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">Invalid Date</p>
+      <p class="date">March 10, 2026</p>
     </div>
   </div>
   
@@ -239,10 +239,10 @@ Link POI-based measures to survey responses, estimate parallel multilevel regres
 <ul>
 <li><p><strong>OSM data</strong> are not included due to the size of the shapefiles. Users who wish to replicate Parts 1-3 with their own OSM data can download the relevant shapefiles from Geofabrik as described below.</p></li>
 <li><p><strong>POI-Bund data</strong> are owned by the German Federal Agency for Cartography and Geodesy (BKG) and are only available to federal authorities and authorized users under the GeoBund data access regulation. Access is granted after the conclusion of a license agreement following a successful application and validation of the data request. Users who wish to access or validate POI-Bund data should contact the <a href="https://www.bkg.bund.de/">BKG</a> directly.</p></li>
-<li><p><strong>GLES survey data</strong> with georeferenced municipality identifiers are restricted-use and cannot be shared publicly due to data protection requirements. For information on access to the sensitive data please consult the <a href="https://www.gesis.org/en/services/processing-and-analyzing-data/analysis-of-sensitive-data/secure-data-center-sdc">GESIS Secure Data Center</a></p></li>
+<li><p><strong>GLES survey data</strong> with georeferenced municipality identifiers are restricted-use and cannot be shared publicly due to data protection requirements. For information on access to the sensitive data please consult the <a href="https://www.gesis.org/en/services/processing-and-analyzing-data/analysis-of-sensitive-data/secure-data-center-sdc">GESIS Secure Data Center</a>.</p></li>
 </ul>
-<p>As a result, the code in Parts 1 through 3 is displayed for illustration but executed silently using pre-saved outputs. All printed diagnostics, bar charts, and maps shown in these parts are based on the real data and were saved during a prior run with the original data sources.</p>
-<p>From Part Four onwards, the tool uses a fully synthetic dataset that can be executed live. This dataset preserves the distributional properties, correlation structure, and clustering of the original GLES data but does not contain any real respondent information or identifiable municipality codes. The synthetic POI counts were calibrated to approximate the distributions observed in the survey-linked data. For details on the data generation procedure, see the accompanying <a href="data_simulation.R">simulation script</a>.</p>
+<p>As a result, the code in Parts 1-3 is displayed for illustration but executed silently using pre-saved outputs. All printed diagnostics, bar charts, and maps shown in these parts are based on the real data and were saved during a prior run with the original data sources.</p>
+<p>From Part 4 onwards, the tool uses a fully synthetic dataset that can be executed live. This dataset preserves the distributional properties, correlation structure, and clustering of the original GLES data but does not contain any real respondent information or municipality codes. The synthetic POI counts were calibrated to approximate the distributions observed in the survey-linked data. For details on the data generation procedure, see the accompanying <a href="data_simulation.R">simulation script</a>.</p>
 </section>
 <section id="set-up" class="level1">
 <h1>Set-up</h1>
@@ -774,7 +774,7 @@ POI types after deduplicating
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The code above shows how to merge POI counts from Parts 1–3 onto individual survey respondents. If you are working with your own georeferenced survey data, run this code after completing Parts 1–3. The only requirement is a shared municipality identifier (<code>mun_id</code>) across the survey and POI data. In the following, we use <code>sim_osm_poi</code>and <code>sim_official_poi</code> that are structurally equal to ‘counts_osm_wide’ and ‘counts_bund_wide’.</p>
+<p>The code above shows how to merge POI counts from Parts 1–3 onto individual survey respondents. If you are working with your own georeferenced survey data, run this code after completing Parts 1–3. The only requirement is a shared municipality identifier (<code>mun_id</code>) across the survey and POI data. In the following, we use <code>sim_osm_poi</code>and <code>sim_official_poi</code> that are structurally equal to <code>counts_osm_wide</code> and <code>counts_bund_wide</code>.</p>
 </div>
 </div>
 <p>For this remainder of this tool, we use the provided simulated data. The simulated survey responses are linked to the simulated POI datasets via the shared municipality identifier:</p>

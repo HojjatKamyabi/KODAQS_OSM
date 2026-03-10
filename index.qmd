@@ -4,14 +4,12 @@ subtitle: "Bias in the Map, Bias in the Results? Validating OpenStreetMap Point 
 author:
   - name: "Daria Dementeva, research associate, Urban Development & Mobility, Luxembourg Institute of Socio-Economic Research"
   - name: "Anne-Kathrin Stroppe, research associate,  Survey Data Curation, GESIS – Leibniz Institute for the Social Sciences"
-date: "`r format(Sys.Date(), '%B %d, %Y')`"
+date: today
 image: img/icon_osmbias.png 
 image-alt: logo
 bibliography: references.bib 
 biblio-style: apa
-format: 
-  html: default
-  pdf: default
+format: html
 params:
   real_data: false
 ---
