@@ -26,7 +26,7 @@ params:
 # At a glance
 
 **How do differences in point of interest (POI) data sources affect analytical results?**\
-This tool offers a hands-on, step-by-step workflow to help users compare POI data from OpenStreetMap (OSM) with administrative POI and built environment datasets. The tutorial walks users through the following steps:\
+This tool offers a hands-on, step-by-step workflow to help users compare POI data from **OpenStreetMap (OSM)** with administrative POI and built environment datasets. The tutorial walks users through the following steps:\
 
 **Part 1: Prepare the OSM POI data**\
 Access OSM POI data, load it into the R environment, clean and standardize the OSM geometries, assign POIs to administrative geographic units, and deduplicate the data.\
@@ -52,17 +52,33 @@ Link POI-based measures to survey responses, estimate parallel multilevel regres
 
 # Introduction {#introduction}
 
-The growing availability of big geodata allows survey researchers to enrich survey datasets with innovative geographic context measures. This development opens up new research opportunities and strengthens spatial perspectives within established theoretical frameworks. Against this backdrop, the use of crowdsourced geospatial data, such as OpenStreetMap (OSM), has increased substantially in survey-based social science research. However, linking OSM data to survey responses raises important questions about data quality and fitness for use, as the database relies on volunteer contributions and lacks standardized quality assurance procedures. At the same time, comparable official data sources are often unavailable, outdated, costly, or insufficiently detailed for many research applications. OSM thus emerges as a practical and cost-effective alternative. Nevertheless, systematic assessments of OSM data quality remain essential as variations in OSM coverage and accuracy may affect substantive research findings.
+The growing availability of big geodata allows survey researchers to enrich survey datasets with innovative geographic context measures. This development opens up new research opportunities and strengthens spatial perspectives within established theoretical frameworks. Against this backdrop, the use of crowdsourced geospatial data, such as **OpenStreetMap (OSM)**, has increased substantially in survey-based social science research. However, linking OSM data to survey responses raises important questions about *data quality* and fitness for use, as the database relies on volunteer contributions and lacks standardized quality assurance procedures. At the same time, comparable official data sources are often unavailable, outdated, costly, or insufficiently detailed for many research applications. OSM thus emerges as a practical and cost-effective alternative. Nevertheless, systematic assessments of OSM data quality remain essential as variations in OSM coverage and accuracy may affect substantive research findings.
 
-This tool fills this critical void and serves as an innovative hands-on primer on OSM data quality checks in survey-based analyses. Specifically, it focuses on assessing the completeness and coverage of OSM POI data when used to objectively proxy local public service provision in survey-based research.
+This tool fills this critical void and serves as an **innovative hands-on primer on OSM data quality checks** in survey-based analyses. Specifically, it focuses on assessing the completeness and coverage of OSM POI data when used to objectively proxy local public service provision in survey-based research.
 
-As an illustrative example, we examine whether living in an under-resourced area from a public service provision perspective is associated with stronger perceptions of infrastructural deprivation (for previous research, see @baybeck2005; @letki2008; @mckay2019; @stroppe2023; @theunissen2024). Public service provision is defined as the availability of (1) hospitals, (2) schools, and (3) supermarkets within immediate vicinity. Perceived infrastructural deprivation is measured via a single survey item from the German Longitudinal Election Study 2021 tapping into respondents' perceptions of their infrastructural disadvantage (i.e., *"Society pays insufficient attention to ensuring access to basic infrastructure and services for people like me"*).
+As an illustrative example, we examine whether living in an **under-resourced area** from the perspective of public service provision is associated with stronger perceptions of **infrastructural deprivation** (for previous research, see @baybeck2005; @letki2008; @mckay2019; @stroppe2023; @theunissen2024).
+
+::: {.callout-tip}
+## Key Concept: Public Service Provision
+
+Public service provision refers to the **local availability of essential services**, operationalized as the presence of:
+
+- Hospitals
+- Schools
+- Supermarkets
+
+within the respondents' **immediate residential environment**.
+:::
+
+**Perceived infrastructural deprivation** is measured using a single survey item from the *German Longitudinal Election Study 2021*, which captures respondents’ sense of infrastructural disadvantage:
+
+> *"Society pays insufficient attention to ensuring access to basic infrastructure and services for people like me."*
 
 To address this question, survey responses are linked with public service provision information about respondents' residential environment, approximated by German municipalities. Augmenting survey data with objective measures of public service provision is fundamental to the research question, but it involves several complicated methodological decisions. These include (but are not limited to): (1) selecting the POI data source for proxies of public service provision and (2) evaluating its data quality. Here, data quality refers primarily to the completeness and coverage of POI data at the municipal level^[OSM data quality is multifaceted and may include several important quality indicators and parameters on which we do not necessarily focus here (see, for example, @dementeva2025). This dimension is particularly suitable for POI-based measures of local public service provision, as completeness and coverage align with the aggregated nature of POI-based indicators, as incomplete or unevenly covered POI data may translate into measurement error at the aggregate level]. Objective measures of public service provision are drawn from two POI data sources: a German OSM subset and official built environment data from the German Federal Agency for Cartography and Geodesy, which serve as a benchmark for evaluating OSM data quality.
 
 This tool walks users through a step-by-step workflow for preparing, comparing, and linking OSM and official POI data with survey data. It demonstrates how differences in POI data sources can affect empirical results and substantive conclusions. By centering on POI-based measures of public service provision, the tool offers a focused and transferable approach to assessing OSM data quality that can be adapted to other concepts and data quality metrics. 
 
-::: {.callout-note title="For your information"}
+::: {.callout-tip title="What to Expect"}
 We suggest treating the tool as a pedagogical and didactical one. It is intended to help researchers become familiar with basic and lightweight OSM POI quality check procedures and to ascertain their fitness for use in a given research application.
 :::
 
@@ -100,6 +116,17 @@ As a result, the code in Parts 1-3 is displayed for illustration but executed si
 
 From Part 4 onwards, the tool uses a fully synthetic dataset that can be executed live. This dataset preserves the distributional properties, correlation structure, and clustering of the original GLES data but does not contain any real respondent information or municipality codes. The synthetic POI counts were calibrated to approximate the distributions observed in the survey-linked data. For details on the data generation procedure, see the accompanying [simulation script](data_simulation.R).
 
+The overall workflow can be summarized as shown below.
+
+```{mermaid}
+flowchart LR
+    A[GLES Data] --> B[Assign Municipality]
+    B --> C[Link OSM and Official POI Data by Municipality]
+    C --> D[Create Public Service Provision Proxies]
+    D --> E[Run Regression Analyses]
+    E --> F[Compare Results for OSM and Official POI Proxies]
+```
+
 # Set-up
 
 ## Getting started
@@ -131,7 +158,7 @@ library(scales) # for axis label formatting
 
 ### Read in Geospatial Data on German Municipalities
 
-To assign POI data to respondents' places of residence, we need the geometries of German municipalities. We rely on the municipality boundaries provided by the German Federal Agency for Cartography and Geodesy (BKG), available through the [Open Data portal ArcGIS Hub](https://hub.arcgis.com/maps/60eb682c95f44ba7b10fee66d871859d). When loading the municipality shapefile, we check for three potential sources of error, following the recommendations outlined in the [AreaMatch](https://kodaqs-toolbox.gesis.org/github.com/StefanJuenger/zipmatching/index/) tool: (1) a consistent coordinate reference system (CRS) across all spatial datasets, (2) timeliness of administrative boundaries and territorial reforms, and (3) the existence, column names, and format of identifiers and variables of interest.
+To assign POI data to respondents' places of residence, we need the geometries of German municipalities. We rely on the municipality boundaries provided by **the German Federal Agency for Cartography and Geodesy (BKG)**, available through the [**Open Data portal ArcGIS Hub**](https://hub.arcgis.com/maps/60eb682c95f44ba7b10fee66d871859d). When loading the municipality shapefile, we check for three potential sources of error, following the recommendations outlined in the [**AreaMatch**](https://kodaqs-toolbox.gesis.org/github.com/StefanJuenger/zipmatching/index/) tool: (1) a consistent coordinate reference system (CRS) across all spatial datasets, (2) timeliness of administrative boundaries and territorial reforms, and (3) the existence, column names, and format of identifiers and variables of interest.
 
 ```{r, message=FALSE, warning=FALSE}
 german_municipalities <- st_read("./data/municipalites_2021_epsg4326.shp", quiet = TRUE)
@@ -152,7 +179,7 @@ head(german_municipalities)
 
 ### Obtain OSM POI data: A Geofabrik-based Approach
 
-There are many ways to access OSM data. Users can request custom subsets through the [Overpass API](https://overpass-api.de/), use the `osmdata` R package, download OSM shapefile extracts from [Geofabrik](https://download.geofabrik.de/europe/germany.html), or rely on web-based services, such as [Protomaps](https://protomaps.com/), [BBBike](https://extract.bbbike.org/), or similar platforms. All of these sources draw from the global [OSM database](https://www.openstreetmap.org/relation/62578), but they differ in their level of detail, geographic coverage, and update frequency. For beginners, as well as for more experienced users who prefer working with spatial files, we recommend starting with the shapefiles provided by Geofabrik. Compared to other OSM data providers, Geofabrik offers clean, well-structured, and de-anonymized datasets that include geometries, place names, coordinates, built environment feature classes, and other key tags. The attribute set is streamlined and comprehensive, so the shapefiles are suited both for users new to OSM and for the needs of this tool.
+There are many ways to access OSM data. Users can request custom subsets through the [**Overpass API**](https://overpass-api.de/), use the `osmdata` R package, download OSM shapefile extracts from [**Geofabrik**](https://download.geofabrik.de/europe/germany.html), or rely on web-based services, such as [**Protomaps**](https://protomaps.com/), [**BBBike**](https://extract.bbbike.org/), or similar platforms. All of these sources draw from the global [**OSM database**](https://www.openstreetmap.org/relation/62578), but they differ in their level of detail, geographic coverage, and update frequency. For beginners, as well as for more experienced users who prefer working with spatial files, we recommend starting with the **shapefiles provided by Geofabrik**. Compared to other OSM data providers, Geofabrik offers clean, well-structured, and de-anonymized datasets that include geometries, place names, coordinates, built environment feature classes, and other key tags. The attribute set is streamlined and comprehensive, so the shapefiles are suited both for users new to OSM and for the needs of this tool.
 
 ::: {.callout-note title="FYI"}
 How to obtain shapefiles from Geobfabrik? For the sake of brevity, we omit a detailed discussion of how to obtain the shapefiles and instead refer users to the designated [instructional script](OSM_Geofabrik_Data_Access.Rmd).
@@ -164,7 +191,7 @@ Once all the shapefiles are obtained, we can read them into R. First, the files 
 
 A complication arises from the fact that there is no single OSM shapefile for Germany. Instead, the shapefiles are organized by the German 16 federal states and (occasionally) administrative area/governmental unit (i.e., *Regierungsbezirke*^[Regierungsbezirke are second-level administrative divisions in some German federal states used to coordinate government administration between the state and district levels]). Below, we extract OSM data for each federal state or administrative area by reading in their respective shapefiles. 
 
-Note that OSM features stored in the shapefiles are extracted into different layers depending on their type. For example, OSM features represented as areas, or polygons, will be written to the layer **with an _a suffix** (`gis_osm_pois_a_free_1`, see below), while features represented as points will be stored to the layer **without** an _a suffix (`gis_osm_pois_free_1`, see below).
+Note that OSM features stored in the shapefiles are extracted into different layers depending on their type. For example, OSM features represented as areas, or polygons, will be written to the layer **with** an _a suffix (`gis_osm_pois_a_free_1`, see below), while features represented as points will be stored to the layer **without** an _a suffix (`gis_osm_pois_free_1`, see below).
 
 ```{r, eval=FALSE}
 
@@ -202,13 +229,21 @@ files <- c(
 
 for (nm in names(files)) { 
   assign(nm, st_read(dsn = file.path("./data", files[[nm]]),
-                     layer = "gis_osm_pois_free_1", quiet = TRUE)) # features drawn as line/point will be written to the layer without an _a suffix.
+                     
+                     # features drawn as line/point will be written to 
+                     # the layer without an _a suffix
+                     
+                     layer = "gis_osm_pois_free_1", quiet = TRUE)) 
 }
 
 for (nm in names(files)) {  
   assign(paste0(nm, "_poly"),
          st_read(dsn = file.path("./data", files[[nm]]),
-                 layer = "gis_osm_pois_a_free_1", quiet = TRUE)) # features drawn as area will be written to the layer with an _a suffix
+                 
+                 # features drawn as area will be written to 
+                 # the layer with an _a suffix
+                 
+                 layer = "gis_osm_pois_a_free_1", quiet = TRUE)) 
 }
 
 ```
@@ -250,7 +285,7 @@ fclass_freq <- function(poi_list, suffix_to_remove) {
 
 ```
 
-In this step, we first collect all administrative area-specific OSM point objects whose names end with `\_regbez_poi` into a named list, using pattern matching and the `mget()` function to retrieve them from the environment. This list is then passed to helper functions that summarize the number of schools, supermarkets, and hospitals per administrative area and stack all regional datasets into a single nationwide point dataset while retaining region identifiers.
+In this step, we first collect all administrative area-specific OSM point objects whose names end with `\_regbez_poi` into a named list, using pattern matching and the `mget()` function to retrieve them from the environment. This list is then passed to helper functions that summarize the number of schools, supermarkets, and hospitals per administrative area and stack all regional datasets into a **single nationwide point dataset** while retaining region identifiers.
 
 ```{r, eval=FALSE}
 poi_list_points   <- mget(ls(pattern = "_regbez_poi$")) |> as.list()
@@ -382,11 +417,11 @@ if (isTRUE(params$real_data)) {
 
 Now that we have obtained and extracted public provision proxies across Germany from OSM, we need to assign each school, supermarket, or hospital to a municipality. This will ensure that, later on, we can link these proxies to survey responses. To do so, we will use a matching key, namely, respondents' municipality of residence as a shared geographical unit across the data sources.
 
-We also ensure that the POI data matches coordinate reference system (CRS) of the German municipality polygons. This step is essential because spatial overlays are only geometrically meaningful when all spatial objects are expressed in a common CRS. Mismatched CRS can otherwise lead to failed matches.
+We also ensure that the POI data matches the CRS of the German municipality polygons. This step is essential because spatial overlays are only geometrically meaningful when all spatial objects are expressed in a common CRS. Mismatched CRS can otherwise lead to failed matches.
 
 The code then identifies which POI geometries are polygons and replaces those with their centroids (i.e., the most central pair of longitude and latitude) so that all features can be treated as points for spatial overlay with the German municipality polygons. Centroid reduction is chosen primarily for data simplification reasons: it allows all POI geometries to be represented in a uniform point format.
 
-We then perform a spatial join to attach municipality identifiers and attributes to each POI by checking whether each POI point lies within a municipality polygon (point-in-polygon overlay). Finally, we assess match quality by counting the number of POIs that could not be assigned to any municipality, which may occur due to boundary effects.
+We then perform a spatial join to attach municipality identifiers and attributes to each POI by checking **whether each POI point lies within a municipality polygon (point-in-polygon overlay**). Finally, we assess match quality by counting the number of POIs that could not be assigned to any municipality, which may occur due to boundary effects.
 
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 germany_poi_all_combined <- st_as_sf(germany_poi_all_combined)
@@ -429,7 +464,7 @@ if (isTRUE(params$real_data)) {
 }
 ```
 
-We identified that `r readRDS("./data/diag_join.rds")$n_na` POI were not matched with a municipality. To track non-matches, we reverse-geocode the unmatched POI. This allows to further diagnose whether the unmatched POI lie outside Germany (e.g., OSM-related error) or are artifacts of the point-in-polygon/municipality matching procedure.
+We identified that **`r readRDS("./data/diag_join.rds")$n_na`** POI were not matched with a municipality. To track non-matches, we reverse-geocode the unmatched POI. This allows to further diagnose whether the unmatched POI lie outside Germany (e.g., OSM-related error) or are artifacts of the point-in-polygon/municipality matching procedure.
 
 ```{r, eval=FALSE, message=FALSE, warning=FALSE}
 poi_na     <- poi_with_municipalities[is.na(poi_with_municipalities$mun_id), ]
@@ -462,7 +497,9 @@ if (isTRUE(params$real_data)) {
 }
 ```
 
-The results show that unmatched POI could not be assigned to German municipalities because they were administratively located in neighboring countries. Most of these POI are in Czechia (`r readRDS("./data/diag_geocode.rds")$country_table[["CZE"]]`), Poland (`r readRDS("./data/diag_geocode.rds")$country_table[["POL"]]`), Switzerland (`r readRDS("./data/diag_geocode.rds")$country_table[["CHE"]]`), Austria (`r readRDS("./data/diag_geocode.rds")$country_table[["AUT"]]`), and France (`r readRDS("./data/diag_geocode.rds")$country_table[["FRA"]]`), as well as in the Netherlands, Belgium, Luxembourg, and Denmark. This pattern suggests that the unmatched observations are primarily driven by POI lying outside Germany, reflecting OSM (positional) accuracy errors and administrative boundary effects, rather than errors from the spatial join. We therefore drop the unmatched POI, as they fall outside German administrative boundaries and are not relevant for the analysis.
+**The results show that unmatched POI could not be assigned to German municipalities because they were administratively located in neighboring countries**. 
+
+Most of these POI are in Czechia (`r readRDS("./data/diag_geocode.rds")$country_table[["CZE"]]`), Poland (`r readRDS("./data/diag_geocode.rds")$country_table[["POL"]]`), Switzerland (`r readRDS("./data/diag_geocode.rds")$country_table[["CHE"]]`), Austria (`r readRDS("./data/diag_geocode.rds")$country_table[["AUT"]]`), and France (`r readRDS("./data/diag_geocode.rds")$country_table[["FRA"]]`), as well as in the Netherlands, Belgium, Luxembourg, and Denmark. This pattern suggests that the unmatched observations are primarily driven by POI lying outside Germany, reflecting OSM (positional) accuracy errors and administrative boundary effects, rather than errors from the spatial join. We therefore drop the unmatched POI, as they fall outside German administrative boundaries and are not relevant for the analysis.
 
 ```{r, eval=FALSE}
 poi_with_municipalities_ger <- poi_with_municipalities[!is.na(poi_with_municipalities$mun_id), ]
@@ -545,8 +582,17 @@ Before deduplication, the dataset contained `r readRDS("./data/diag_dedup.rds")$
 
 # Part Two: Obtain official POI data: A POI-Bund-based Approach
 
-This KODAQS tool is based on the POI-Bund dataset, an official points-of-interest database provided by the Federal Agency for Cartography and Geodesy. The dataset is compiled from geocoded POI address lists obtained from official sources or/and from independent research conducted by the BKG in 2022. For schools, address lists for each federal state were obtained from state statistical authorities or other state agencies responsible for schools. For hospitals, address lists were obtained from the Institute for the Hospital Remuneration System (InEK) that maintains the official registry of all hospitals authorized to provide inpatient care within the national hospital financing system. For supermarkets, address lists were obtained from gb consite, a commercial organization specializing in web-based geomarketing and logistics geoservices. All public provision proxies, namely hospitals, schools, and supermarkets, were already georeferenced with a German municipality ID. Each public provision POI from the POI-Bund dataset is unique.
+This KODAQS tool is based on **the POI-Bund dataset**, an official POI dataset provided by the Federal Agency for Cartography and Geodesy. The dataset is compiled from geocoded POI address lists obtained from official sources or/and from independent research conducted by the BKG in 2022. 
 
+::: {.callout-tip title="How Official POI Data are Produced"}
+
+- **For schools**, address lists for each federal state were obtained from state statistical authorities or other state agencies responsible for schools. 
+- **For hospitals**, address lists were obtained from the Institute for the Hospital Remuneration System (InEK) that maintains the official registry of all hospitals authorized to provide inpatient care within the national hospital financing system. 
+
+- **For supermarkets**, address lists were obtained from gb consite, a commercial organization specializing in web-based geomarketing and logistics geoservices. 
+:::
+
+All public provision proxies, namely hospitals, schools, and supermarkets, were already georeferenced with a German municipality ID. Each public provision POI from the POI-Bund dataset is unique
 
 ```{r, eval=FALSE}
 
@@ -596,9 +642,20 @@ if (isTRUE(params$real_data)) {
 
 A critical step in using OSM data for proxying public service provision is the evaluation of coverage errors. This step addresses whether OSM-based public service provision indicators may accurately numerically capture the POI they are intended to proxy, and whether potential errors in coverage (over- or undercoverage) may shape substantive conclusions. As we have pointed out earlier, coverage is particularly relevant for POI-based indicators because these measures are typically aggregated to neighborhoods or other administrative units: uneven or incomplete POI coverage can therefore induce measurement error at the aggregate level.
 
-Following the conceptualization proposed by @dementeva2025, coverage in OSM can be understood as the spatial analogue of coverage error in survey sampling. In this perspective, the "population" consists of real-world public service provision facilities (e.g., all schools, supermarkets and hospitals in Germany), while the OSM dataset aims to represent that population. Coverage is assessed by comparing the actual presence of public service provision features with their representation in an OSM subset. More formally, coverage error in OSM consists of two components: (1) errors of omission occur when real-world features are missing from OSM. These errors correspond to undercoverage, for example, when an existing school or clinic is not included in the database; (2) errors of commission arise when OSM contains excessive and duplicated features. These errors are consistent with overcoverage, such as when a single facility is recorded multiple times or when a feature is mapped although it does not exist in reality.
+Following the conceptualization proposed by @dementeva2025, coverage in OSM can be understood as the spatial analogue of coverage error in survey sampling. In this perspective, the "population" consists of real-world public service provision facilities (e.g., all schools, supermarkets and hospitals in Germany), while the OSM dataset aims to represent that population. 
 
-In this part of the tool, OSM-based POI measures are benchmarked against official built environment data from BKG, which are treated as a gold standard. By comparing counts and distributions of public service facilities across the two datasets and German municipalities, the tool enables researchers to quantify and visualize under- and overcoverage in OSM and to critically assess the suitability of OSM data for linking with survey responses. In particular, below, for each public provision service proxy, we count the number of POI in each data source. We visualize these counts using side-by-side bar charts, which allows to directly compare coverage across categories and identify where the two datasets converge or differ in their coverage of public service provision proxies.
+**Coverage is assessed by comparing the actual presence of public service provision features with their representation in an OSM subset**. 
+
+:::{.callout-note title="More on Coverage"}
+
+More formally, coverage error in OSM consists of two components: 
+
+- **Errors of omission** occur when real-world features are missing from OSM. These errors correspond to **undercoverage**, for example, when an existing school or clinic is not included in the database 
+
+- **Errors of commission** arise when OSM contains excessive and duplicated features. These errors are consistent with **overcoverage**, such as when a single facility is recorded multiple times or when a feature is mapped although it does not exist in reality.
+::: 
+
+In this part of the tool, **OSM-based POI measures are benchmarked against official built environment data from BKG**, which are treated as a gold standard. By comparing counts and distributions of public service facilities across the two datasets and German municipalities, the tool enables researchers to quantify and visualize under- and overcoverage in OSM and to critically assess the suitability of OSM data for linking with survey responses. In particular, below, for each public provision service proxy, we count the number of POI in each data source. We visualize these counts using side-by-side bar charts, which allows to directly compare coverage across categories and identify where the two datasets converge or differ in their coverage of public service provision proxies.
 
 ```{r, eval=FALSE}
 combined <- bind_rows(
@@ -671,7 +728,11 @@ The figure shows a comparison of POI counts for three public service provision p
 
 These patterns, however, may indicate that OSM tends to slightly overcover certain public service proxies, likely due to the nature of volunteer-based data collection and differences in data tagging and built environment feature classification conventions. For instance, if a school consists of multiple campuses, POI-Bund may record it as a single institution, whereas OSM contributors might map each campus individually. Similarly, OSM may overcapture supermarkets because volunteers can record street-level information directly on the ground, while POI-Bund relies primarily on web-based address listings, which may omit some localized entries. Therefore, coverage discrepancies may arise because the datasets are not fully conceptually equivalent in how they define schools, hospitals, and supermarkets, nor in how these features are counted and documented. 
 
-Overall, however, the two datasets largely converge in their representation of public service provision, particularly in terms of the distribution across service categories at the nationwide level. This suggests that, despite possible systematic differences in data collection and production practices, both data sources provide a broadly consistent picture of public service coverage in Germany. This may tentatively indicate that the two datasets can be used interchangeably for measuring proxies of public service provision, despite their conceptual inequivalence.
+::: {.callout-tip title="Major Take-Away (1)"}
+**The two datasets largely converge in their representation of public service provision, particularly in terms of the distribution across service categories at the nationwide level**. 
+:::
+
+This suggests that, despite possible systematic differences in data collection and production practices, both data sources provide a broadly **consistent picture of public service coverage in Germany**. This may tentatively indicate that the two datasets can be used interchangeably for measuring proxies of public service provision, despite their conceptual inequivalence.
 
 Next, we compare the spatial distribution of public service provision across data sources by mapping POI counts at the municipality level. For each dataset, we aggregate points of interest by municipality and service type, then join these counts to municipal boundary geometries. We visualize the results using faceted choropleth maps, with each panel representing a different public service proxy and municipalities shaded by the POI counts. The figures are instrumental in assessing whether POI-Bund and OSM not only differ in overall counts, but also in how public service provision is spatially distributed across municipalities and whether the spatial distribution is relatively the same across the data sources.
 
@@ -772,7 +833,9 @@ if (isTRUE(params$real_data)) {
 
 Across both figures, the relative spatial distribution of public service provision look very similar in POI-Bund and OSM. For all three service types, higher POI counts are consistently concentrated in densely populated and urbanized areas, especially around major metropolitan regions. This suggests that both datasets point to the same municipalities as key hubs of public service provision, indicating strong agreement in the relative spatial distribution of services across Germany. Importantly, there are no major regions where one dataset shows extensive coverage while the other shows none, and rural areas are represented in much the same way in both datasets. Overall, the maps show a high degree of convergence between POI-Bund and OSM in how public service provision proxies are relatively distributed across space.
 
-Taken together, the presented evidence increases confidence in using OSM data as a reliable source for capturing public service provision proxies, even though there might be critical differences in how data are collected, tagged, and recorded in OSM compared to the official built environment data.
+::: {.callout-important title="Major Take-Away (2)"}
+Despite differences in data production, both datasets provide a **similar picture of public service coverage in Germany**, suggesting they may serve as **interchangeable proxies for public service provision**.
+:::
 
 # Part Four: Link to Survey Data and Assess Impacts on Analytical Results
 
@@ -780,9 +843,31 @@ Having prepared and compared POI data from OSM and official sources in the first
 
 ## Survey Data: German Longitudinal Election Study 2021
 
-To measure subjective perceptions of infrastructural deprivation, we rely on simulated survey data that mirrors the structure and distributional properties of the German Longitudinal Election Study (GLES) [@gles2023]. The [GLES Cross-Section, Pre- and Post-Election 2021](https://search.gesis.org/research_data/ZA7702){target="_blank"} is a cross-sectional, probability-based, georeferenced survey focusing on the political attitudes, opinions, and behaviors of German voters and non-voters, defined as German citizens aged 16 and older who are registered in the Federal Republic of Germany with their primary residence. The original dataset comprises 8,550 respondents that were sampled in 162 municipalities. All responses were georeferenced to the municipality of each respondent's registered residence.
+To measure subjective perceptions of infrastructural deprivation, we rely on simulated survey data that mirrors the structure and distributional properties of the **German Longitudinal Election Study (GLES)** [@gles2023]. The [**GLES Cross-Section, Pre- and Post-Election 2021**](https://search.gesis.org/research_data/ZA7702){target="_blank"} is a cross-sectional, probability-based, georeferenced survey focusing on the political attitudes, opinions, and behaviors of German voters and non-voters, defined as German citizens aged 16 and older who are registered in the Federal Republic of Germany with their primary residence. The original dataset comprises 8550 respondents that were sampled in 162 municipalities. All responses were georeferenced to the municipality of each respondent's registered residence.
 
-The dependent variable, perceived infrastructural deprivation, was measured by a single survey item: "Society pays too little attention to ensuring that people like me have access to basic infrastructures and services (e.g., post office, doctors, banks, public transportation, schools, Internet)." Respondents filled out a five-point Likert scale ranging from 1 ("Strongly agree") to 5 ("Strongly disagree"). For the analysis, the scale was reversed and recoded to range from 0 (low deprivation) to 4 (high deprivation), so that higher values indicate stronger perceived infrastructural deprivation.
+::: {.callout-tip title ="Dependent Variable"}
+
+## Perceived Infrastructural Deprivation
+
+>  **"Society pays too little attention to ensuring that people like me have access to basic infrastructures and services (e.g., post offices, doctors, banks, public transportation, schools, Internet)."**
+
+**Response scale**
+
+1 - Strongly agree  
+2 - Agree  
+3 - Neither agree nor disagree  
+4 - Disagree  
+5 - Strongly disagree
+
+**Recoding for analysis**
+
+The scale was **reversed and rescaled** to range from:
+
+- **0 - Low deprivation**
+- **4 - High deprivation**
+
+Higher values indicate **stronger perceived infrastructural deprivation**.
+:::
 
 ## Data Linkage
 
@@ -802,7 +887,7 @@ counts_bund_wide <- counts_bund |>
 
 ```
 
-::: {.callout-note title="Applying this to your own data"}
+::: {.callout-tip title="Transferring to Your Case Study"}
 The code above shows how to merge POI counts from Parts 1–3 onto individual survey respondents. If you are working with your own georeferenced survey data, run this code after completing Parts 1–3. The only requirement is a shared municipality identifier (`mun_id`) across the survey and POI data. In the following, we use `sim_osm_poi`and `sim_official_poi` that are structurally equal to `counts_osm_wide` and `counts_bund_wide`.
 :::
 
@@ -1028,17 +1113,31 @@ ggplot(results, aes(x = poi_type, y = estimate, color = source)) +
 
 ## Interpretation
 
-The coefficient plot reveals several key findings. First, across all three public service provision proxies, the estimated effects are negative, consistent with the theoretical expectation that higher availability of local public services is associated with lower perceived infrastructural deprivation. Respondents living in municipalities with more hospitals, schools, or supermarkets tend to report lower levels of perceived deprivation, even after controlling for individual-level demographic characteristics.
+::: {.callout-note title = "Major Implications"}
 
-Second, and critically for the purposes of this tool, the OSM-based and official POI-Bund-based estimates are highly similar in magnitude, direction, and statistical significance. The confidence intervals overlap substantially across all comparisons, indicating that the choice of POI data source does not meaningfully alter the substantive conclusions drawn from the analysis.
+**1. Expected Relationship**
+
+Across all three proxies of public service provision, the estimated effects are negative. 
+Municipalities with more **hospitals, schools, or supermarkets** are associated with **lower perceived infrastructural deprivation**, controlling for individual demographic characteristics.
+
+**2. Robustness across Data Sources**
+
+Estimates derived from **OSM** and **official POI-Bund data** are **very similar** in magnitude, direction, and statistical significance. The substantial overlap of confidence intervals indicates that the **choice of POI data source does not meaningfully affect the substantive conclusions**.
+:::
 
 # Conclusion, Recommendations and Future Work {#conclusion-recommendations-future-work}
 
-The goal of this tool was to address a critical gap by providing an innovative, hands-on primer for assessing OSM data quality in survey-based analyses. The tool focused on evaluating the coverage of OSM POI data when used as an objective proxy for local public service provision in linked survey data applications and how differences in coverage may propagate into substantive conclusions.
+The goal of this tool was to address a critical gap by providing a **hands-on primer for assessing OSM data quality in survey-based analyses**. Specifically, the tool evaluated the **coverage of OSM POI data** when used as a proxy for **local public service provision** in linked survey data and examined whether differences in coverage translate into different substantive conclusions.
 
-First, we demonstrated that OSM-based POI data and official built environment data offer largely comparable coverage of public service provision proxies at a nationwide and local levels. Second, the relatively small and negligible differences in coverage can be attributed to variations in data production processes and tagging logics. These differences reflect how OSM contributors and official data officers record, classify, and tag built environment features, as well as the specific rules applied when determining what can be defined as schools, hospitals, or supermarkets both conceptually and geographically. Despite this conceptual non-equivalence across data sources, our results indicate that, for the purposes of our application, these POI datasets can be treated as interchangeable. Third, regression estimates derived from OSM and POI-Bund proxies yield highly similar results across all public service provision indicators.
+Three main findings are summarized here:
 
-Overall, these findings strengthen confidence that substantive conclusions regarding the relationship between perceived infrastructural deprivation and objective measures of public service provision are largely insensitive to the choice of POI data source. Any analytical error arising from differences in coverage or conceptual definitions across datasets appears to be minimal. Accordingly, our study demonstrates that OSM and official POI data sources can be considered highly interchangeable in survey data linkage-based research, particularly when they are used to operationalize *aggregated measures of built environment availability*.
+**First**, OSM-based POI data and official built environment data provide **largely comparable coverage** of public service provision proxies at both the **national and municipal levels**.
+
+**Second**, the small differences in coverage primarily reflect **differences in data production and tagging practices**. OSM contributors and official data providers apply distinct rules when recording, classifying, and tagging built environment features, including how facilities such as schools, hospitals, or supermarkets are defined conceptually and geographically. Despite this conceptual non-equivalence, our results suggest that the datasets can be treated as interchangeable for this application.
+
+**Third**, regression estimates derived from **OSM-based and POI-Bund proxies** yield **highly similar results across all public service provision indicators**.
+
+Overall, these findings strengthen confidence that substantive conclusions regarding the relationship between perceived infrastructural deprivation and objective measures of public service provision are largely insensitive to the choice of POI data source. Any analytical error arising from differences in coverage or conceptual definitions across datasets appears to be minimal. Accordingly, our study demonstrates that OSM and official POI data sources can be considered highly interchangeable in survey data linkage-based research, particularly when they are used to operationalize **aggregated measures of built environment availability**.
 
 ## Key Recommendations
 
