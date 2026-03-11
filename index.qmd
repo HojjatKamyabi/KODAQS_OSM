@@ -383,7 +383,7 @@ if (isTRUE(params$real_data)) {
 
 Now that we have obtained and extracted public provision proxies across Germany from OSM, we need to assign each school, supermarket, or hospital to a municipality. This will ensure that, later on, we can link these proxies to survey responses. To do so, we will use a matching key, namely, respondents' municipality of residence as a shared geographical unit across the data sources.
 
-We also ensure that the POI data matches coordinate reference system (CRS) that of the German municipality polygons. This step is essential because spatial overlays are only geometrically meaningful when all spatial objects are expressed in a common CRS. Mismatched CRS can otherwise lead to failed matches.
+We also ensure that the POI data matches coordinate reference system (CRS) of the German municipality polygons. This step is essential because spatial overlays are only geometrically meaningful when all spatial objects are expressed in a common CRS. Mismatched CRS can otherwise lead to failed matches.
 
 The code then identifies which POI geometries are polygons and replaces those with their centroids (i.e., the most central pair of longitude and latitude) so that all features can be treated as points for spatial overlay with the German municipality polygons. Centroid reduction is chosen primarily for data simplification reasons: it allows all POI geometries to be represented in a uniform point format.
 
