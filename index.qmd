@@ -129,7 +129,6 @@ library(scales) # for axis label formatting
 
 ```
 
-
 ### Read in Geospatial Data on German Municipalities
 
 To assign POI data to respondents' places of residence, we need the geometries of German municipalities. We rely on the municipality boundaries provided by the German Federal Agency for Cartography and Geodesy (BKG), available through the [Open Data portal ArcGIS Hub](https://hub.arcgis.com/maps/60eb682c95f44ba7b10fee66d871859d). When loading the municipality shapefile, we check for three potential sources of error, following the recommendations outlined in the [AreaMatch](https://kodaqs-toolbox.gesis.org/github.com/StefanJuenger/zipmatching/index/) tool: (1) a consistent coordinate reference system (CRS) across all spatial datasets, (2) timeliness of administrative boundaries and territorial reforms, and (3) the existence, column names, and format of identifiers and variables of interest.
