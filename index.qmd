@@ -1086,6 +1086,10 @@ Future studies should prioritize time-compatible comparisons between official PO
 
 It would be useful to disentangle true coverage gaps from changes driven by POI turnover, particularly for more volatile features, such as supermarkets, in order to insight into the temporal stability of OSM subsets.
 
+-   **Investigate the differences between OSM and official POI data.**
+
+While the differences between OSM and official POI data may appear negligible at first glance, it is worthwhile to identify the reasons why they differ and, most importantly, where they differ. Future work should focus on the relationship between the differences between OSM and official POI data and municipality-level indicators, such as sociodemographic and socioeconomic indicators that may explain why certain areas are more prone to differences than others.
+
 # References
 
 ::: {#refs}
