@@ -1,6 +1,6 @@
 ---
 title: "osmBias"
-subtitle: "Bias in the Map, Bias in the Results? Validating OpenStreetMap Point of Interest Data for Individual-Level Survey-Based Analysis"
+subtitle: "Validating OpenStreetMap Point of Interest Data for Individual-Level Survey-Based Analysis"
 author:
   - name: "Daria Dementeva, research associate, Urban Development & Mobility, Luxembourg Institute of Socio-Economic Research"
   - name: "Anne-Kathrin Stroppe, research associate,  Survey Data Curation, GESIS – Leibniz Institute for the Social Sciences"
