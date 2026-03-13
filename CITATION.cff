@@ -1,0 +1,23 @@
+cff-version: 1.0.0
+message: "If you use this tool, please cite it as below."
+title: "osmBias - Validating OpenStreetMap Point of Interest Data for Individual-Level Survey-Based Analysis"
+authors:
+  - family-names: "Dementeva"
+    given-names: "Daria"
+    affiliation: "Luxembourg Institute of Socio-Economic Research"
+    orcid: "XXXX"
+  - family-names: "Stroppe"
+    given-names: "Anne"
+    affiliation: "GESIS - Leibniz Institute for the Social Sciences"
+    orcid: "https://orcid.org/0000-0002-1251-9235"
+date-released: "2026-03-13"
+version: "1.0.0"
+url: "https://kodaqs-toolbox.gesis.org/github.com/dariadementeva/KODAQS_OSM"
+repository-code: "https://github.com/dariadementeva/KODAQS_OSM"
+keywords:
+  - "Data Linking"
+  - "Measurement Error"
+  - "Coverage Error"
+  - "Spatial Data"
+  - "Spatial Specification"
+license: MIT
